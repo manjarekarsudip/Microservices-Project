@@ -15,12 +15,17 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.jobapp.reviewms.review.messaging.ReviewMessageProducer;
+
 @RestController
 @RequestMapping("/reviews")
 public class ReviewController {
 
 	@Autowired
 	private ReviewService reviewService;
+	
+	@Autowired
+	private ReviewMessageProducer reviewMessageProducer;
 	
 	@GetMapping
 	public ResponseEntity<List<Review>> getAllReviews(@RequestParam Long companyId){
@@ -30,8 +35,10 @@ public class ReviewController {
 	@PostMapping
 	public ResponseEntity<String> addReview(@RequestParam Long companyId, @RequestBody Review review){
 		boolean isReviewSaved = reviewService.addReview(companyId, review);
-		if (isReviewSaved)
+		if (isReviewSaved) {
+			reviewMessageProducer.sendMessage(review);
 			return new ResponseEntity<>("Review Added Successfully", HttpStatus.OK);
+		}
 		else
 			return new ResponseEntity<>("Review Not Saved - Company ID Not Found", HttpStatus.NOT_FOUND);
 	}
@@ -58,4 +65,21 @@ public class ReviewController {
 		else
 			return new ResponseEntity<>("Review Not Deleted", HttpStatus.NOT_FOUND);
 	}
+	
+	@GetMapping("/averageRating")
+	public double getAverageRating(@RequestParam Long companyId) {
+		List<Review> reviewsList = reviewService.getAllReviews(companyId);
+		return reviewsList.stream()
+		        .mapToDouble(review -> {
+		            try {
+		                return Double.parseDouble(review.getRating());
+		            } catch (NumberFormatException e) {
+		                // Handle the case where rating cannot be parsed
+		                // For example, you could log the error or return a default value
+		                return 0.0; // Return 0 if parsing fails; adjust as needed
+		            }
+		        })
+		        .average()
+		        .orElse(0.0); // Return 0 if the list is empty	
+		}
 }

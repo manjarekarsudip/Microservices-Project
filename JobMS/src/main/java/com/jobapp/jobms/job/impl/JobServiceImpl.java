@@ -23,6 +23,10 @@ import com.jobapp.jobms.job.external.Company;
 import com.jobapp.jobms.job.external.Review;
 import com.jobapp.jobms.job.mapper.JobMapper;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import io.github.resilience4j.retry.annotation.Retry;
+
 @Service
 public class JobServiceImpl implements JobService {
 
@@ -39,15 +43,27 @@ public class JobServiceImpl implements JobService {
 	@Autowired
 	private ReviewClient reviewClient;
 	
+	int attempt = 0;
+	
 	@Override
+//	@CircuitBreaker(name = "companyBreaker" , fallbackMethod = "companyBreakerFallback")
+//	@Retry(name = "companyBreaker" , fallbackMethod = "companyBreakerFallback")
+	@RateLimiter(name = "companyBreaker" , fallbackMethod = "companyBreakerFallback")
 	public List<JobDTO> findAll() {
 		
+		System.out.println("No of Attempts : "+ ++attempt);
 		List<Job> jobs = jobRepository.findAll();
 		List<JobDTO> jobWithCompanyDTOs = new ArrayList<>();
 		
 		return jobs.stream().map(this::convertToDTO).collect(Collectors.toList());
 	}
 
+	public List<String> companyBreakerFallback(Exception e){
+		List<String> list = new ArrayList<>();
+		list.add("Dummy");
+		return list;
+	}
+	
 	private JobDTO convertToDTO(Job job) {
 		
 			//RestTemplate restTemplate = new RestTemplate();
