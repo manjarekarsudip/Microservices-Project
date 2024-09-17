@@ -23,8 +23,6 @@ public class CompanyServiceImpl implements CompanyService {
 	@Autowired
 	private ReviewClient reviewClient;
 	
-	
-	
 	public CompanyServiceImpl(CompanyRepository companyRepository, ReviewClient reviewClient) {
 	super();
 	this.companyRepository = companyRepository;

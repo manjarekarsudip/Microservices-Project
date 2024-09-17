@@ -10,7 +10,7 @@ import com.jobapp.jobms.job.external.Review;
 
 import jakarta.websocket.server.PathParam;
 
-@FeignClient(name = "ReviewMS")
+@FeignClient(name = "ReviewMS", url ="${review-service.url}")
 public interface ReviewClient {
 
     @GetMapping("/reviews")

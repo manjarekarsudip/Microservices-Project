@@ -1,0 +1,41 @@
+spring:
+  application:
+    name: Gateway
+  cloud:
+    gateway:
+      routes:
+        - id: JobMS
+          uri: lb://JOBMS
+          predicates:
+            - Path=/jobs/**
+        - id: CompanyMS
+          uri: lb://COMPANYMS
+          predicates:
+            - Path=/companies/**
+        - id: ReviewMS
+          uri: lb://REVIEWMS
+          predicates:
+            - Path=/reviews/**
+  web:
+    resources:
+      add-mappings: false
+  server:
+    port: 8084
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+
+logging:
+  level:
+    root: info
+    org.springframework.cloud.gateway.route.RouteDefinitionLocator: info
+    org.springframework.cloud.gateway: trace
